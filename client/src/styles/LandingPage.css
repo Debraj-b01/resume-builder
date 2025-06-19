@@ -1,0 +1,11 @@
+/* Remove old float-based image containers if unused */
+.img-container {
+  display: none;
+}
+
+.overlay-text {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 2rem;
+}
