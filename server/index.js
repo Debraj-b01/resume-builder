@@ -1,42 +1,53 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const mongoDB = require('./config/db');
-const authRoutes = require('./routes/auth.route');
-const userRoutes = require('./routes/user.route');
-const resumeRoutes = require('./routes/resume.route');
+const cookieParser = require('cookie-parser');
+const path = require('path');
 
-const app = express();
-
-//dotenv config
+// Load environment variables
 dotenv.config();
 
-//database config   
-mongoDB();
+// Initialize Express app
+const app = express();
 
-
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+}));
 app.use(express.json());
-//middlewares
-app.use(cors());
+app.use(cookieParser());
 
-//routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/data', resumeRoutes);
-
-//middleware for logging
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    next();
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => {
+  console.log('✅ MongoDB connected');
+}).catch((err) => {
+  console.error('❌ MongoDB connection error:', err);
 });
 
-//error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+// Example routes
+app.get('/', (req, res) => {
+  res.send('Resume Builder API is running...');
 });
 
+// Import and use your actual routes
+// Example: app.use('/api/auth', require('./routes/authRoutes'));
 
-app.listen(process.env.PORT, () => {
-console.log(`Server is working on http://localhost:${process.env.PORT}`);
+// Serve static files from client build (for production)
+if (process.env.NODE_ENV === 'production') {
+  const clientPath = path.resolve(__dirname, '../client/dist');
+  app.use(express.static(clientPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientPath, 'index.html'));
+  });
+}
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
